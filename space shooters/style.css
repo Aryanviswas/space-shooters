@@ -1,0 +1,38 @@
+#home-page {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: linear-gradient(135deg, #003340, #003340 60%, #000d17 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    user-select: none;
+    z-index: 50;
+  }
+  #home-page h1 {
+    font-size: 3rem;
+    font-weight: 900;
+    color: #00d4ff;
+    text-shadow: 0 0 10px #00d4ff;
+    margin-bottom: 30px;
+    text-align: center;
+  }
+  #start-btn {
+    background: #00d4ff;
+    color: #001f3f;
+    padding: 18px 45px;
+    font-size: 1.7rem;
+    border:none;
+    border-radius: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 0 20px #00d4ffcc;
+    transition: background 0.3s, transform 0.1s;
+    user-select: none;
+  }
+  #start-btn:hover {
+    background: #009acc;
+  }
+  #start-btn:active {
+    transform: scale(0.95);
+  }

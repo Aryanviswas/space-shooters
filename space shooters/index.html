@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>Mobile Responsive Shooting Game with Lives and Background</title>
+<style>
+  /* Reset and base */
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  html, body {
+    height: 100%;
+    background: #121212;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #fff;
+    overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  #game-container {
+    position: relative;
+    width: 350px;
+    height: 600px;
+    background: linear-gradient(180deg, #0a2634, #001f3f);
+    border-radius: 15px;
+    box-shadow: 0 0 20px #00d4ffaa;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    user-select: none;
+  }
+  #scoreboard {
+    flex: none;
+    text-align: center;
+    font-size: 1.25rem;
+    padding: 12px 0;
+    background: #003340;
+    letter-spacing: 2px;
+    font-weight: 700;
+    text-shadow: 0 0 8px #00d4ff;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+  }
+  #scoreboard > div {
+    user-select: none;
+  }
+  #game-area {
+    position: relative;
+    flex-grow: 1;
+    background: #001f3f;
+    overflow: hidden;
+  }
+  /* Background starfield */
+  #game-area::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; bottom: 0; right: 0;
+    background:
+      radial-gradient(2px 2px at 20% 30%, #fff, transparent),
+      radial-gradient(2px 2px at 40% 70%, #fff, transparent),
+      radial-gradient(2px 2px at 55% 40%, #fff, transparent),
+      radial-gradient(2px 2px at 80% 25%, #fff, transparent),
+      radial-gradient(2px 2px at 85% 60%, #fff, transparent),
+      radial-gradient(3px 3px at 10% 80%, #fff, transparent),
+      radial-gradient(1.5px 1.5px at 70% 80%, #fff, transparent);
+    background-repeat: no-repeat;
+    animation: twinkle 3s infinite alternate ease-in-out;
+    z-index: 0;
+  }
+  @keyframes twinkle {
+    0% { filter: brightness(1); }
+    100% { filter: brightness(1.8); }
+  }
+  /* Player */
+  #player {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    width: 50px;
+    height: 50px;
+    background: #00d4ff;
+    border-radius: 10px 10px 5px 5px;
+    transform: translateX(-50%);
+    box-shadow: 0 0 15px #00d4ff;
+    transition: left 0.1s linear;
+    z-index: 10;
+  }
+  #player::before {
+    content: '';
+    position: absolute;
+    top: 5px;
+    left: 50%;
+    width: 15px;
+    height: 35px;
+    background: linear-gradient(45deg, #00e0ff, #007ea7);
+    border-radius: 6px;
+    transform: translateX(-50%);
+  }
+  /* Bullets */
+  .bullet {
+    position: absolute;
+    width: 7px;
+    height: 20px;
+    background: #ff385c;
+    border-radius: 4px;
+    box-shadow: 0 0 8px #ff2a55;
+    z-index: 15;
+  }
+  /* Enemies */
+  .enemy {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #ff4f1a, #d40000);
+    border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+    box-shadow: 0 0 10px #ff4500;
+    z-index: 10;
+  }
+  /* Controls container */
+  #controls {
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 0;
+    background: #022d44;
+    z-index: 20;
+  }
+  button.control-btn {
+    width: 70px;
+    height: 50px;
+    background: #004d66;
+    border: none;
+    border-radius: 12px;
+    color: #00d4ff;
+    font-weight: 700;
+    font-size: 1.5rem;
+    box-shadow: 0 0 12px #00d4ffaa;
+    user-select: none;
+    transition: background 0.2s, transform 0.1s;
+  }
+  button.control-btn:active {
+    background: #007aab;
+    transform: scale(0.95);
+  }
+  #game-over-screen {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 90%;
+    max-width: 320px;
+    padding: 30px;
+    background: #220000cc;
+    border: 3px solid #ff2a55;
+    border-radius: 15px;
+    color: #ff385c;
+    font-size: 1.8rem;
+    font-weight: 900;
+    text-align: center;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 30px #ff385c;
+    user-select: none;
+    display: none;
+    z-index: 30;
+  }
+  #game-over-screen button {
+    margin-top: 20px;
+    background: #ff385c;
+    border: none;
+    color: white;
+    font-weight: 700;
+    font-size: 1.2rem;
+    padding: 10px 20px;
+    border-radius: 12px;
+    box-shadow: 0 0 12px #ff385c88;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  #game-over-screen button:hover {
+    background: #ff0044;
+  }
+  @media (max-width: 360px) {
+    #game-container {
+      width: 100vw;
+      height: 85vh;
+      max-width: 350px;
+      max-height: 600px;
+    }
+  }
+</style>
+</head>
+<body>
+<div id="game-container" role="main" aria-label="Shooting Game">
+  <div id="scoreboard" aria-live="polite" aria-atomic="true" aria-relevant="text">
+    <div id="score-display">Score: 0</div>
+    <div id="lives-display">Lives: 3</div>
+  </div>
+  <div id="game-area" tabindex="0" aria-label="Game Area">
+    <div id="player" aria-label="Player Shooter"></div>
+    <div id="game-over-screen" role="alert" aria-live="assertive">
+      Game Over<br/>
+      <button id="restart-btn" aria-label="Restart Game">Restart</button>
+    </div>
+  </div>
+  <div id="controls" aria-label="Game Controls">
+    <button class="control-btn" id="left-btn" aria-label="Move Left">&#9664;</button>
+    <button class="control-btn" id="shoot-btn" aria-label="Shoot">&#128308;</button>
+    <button class="control-btn" id="right-btn" aria-label="Move Right">&#9654;</button>
+  </div>
+</div>
+
+<script>
+(() => {
+  const gameArea = document.getElementById('game-area');
+  const player = document.getElementById('player');
+  const scoreDisplay = document.getElementById('score-display');
+  const livesDisplay = document.getElementById('lives-display');
+  const leftBtn = document.getElementById('left-btn');
+  const rightBtn = document.getElementById('right-btn');
+  const shootBtn = document.getElementById('shoot-btn');
+  const gameOverScreen = document.getElementById('game-over-screen');
+  const restartBtn = document.getElementById('restart-btn');
+
+  const gameWidth = gameArea.clientWidth;
+  const gameHeight = gameArea.clientHeight;
+
+  const playerWidth = player.clientWidth;
+  const playerSpeed = 8;
+
+  const bulletSpeed = 12;
+  const enemySpeed = 2;
+  const enemySpawnInterval = 1500;
+
+  let playerX;
+  let score;
+  let lives;
+
+  let bullets = [];
+  let enemies = [];
+
+  let moveLeft = false;
+  let moveRight = false;
+  let lastEnemySpawn = 0;
+  let gameOver = false;
+
+  function clamp(value, min, max) {
+    return Math.max(min, Math.min(max, value));
+  }
+
+  function createBullet(x, y) {
+    const bullet = document.createElement('div');
+    bullet.classList.add('bullet');
+    bullet.style.left = x + 'px';
+    bullet.style.top = y + 'px';
+    gameArea.appendChild(bullet);
+    return bullet;
+  }
+
+  function createEnemy(x, y) {
+    const enemy = document.createElement('div');
+    enemy.classList.add('enemy');
+    enemy.style.left = x + 'px';
+    enemy.style.top = y + 'px';
+    gameArea.appendChild(enemy);
+    return enemy;
+  }
+
+  function isColliding(a, b) {
+    const aRect = a.getBoundingClientRect();
+    const bRect = b.getBoundingClientRect();
+    return !(
+      aRect.top > bRect.bottom ||
+      aRect.bottom < bRect.top ||
+      aRect.right < bRect.left ||
+      aRect.left > bRect.right
+    );
+  }
+
+  function updateScore() {
+    scoreDisplay.textContent = `Score: ${score}`;
+  }
+
+  function updateLives() {
+    livesDisplay.textContent = `Lives: ${lives}`;
+  }
+
+  function shoot() {
+    if (gameOver) return;
+    const bulletX = playerX - 3.5;
+    const bulletY = gameHeight - 70;
+    const bullet = createBullet(bulletX, bulletY);
+    bullets.push(bullet);
+  }
+
+  function endGame() {
+    gameOver = true;
+    gameOverScreen.style.display = 'block';
+  }
+
+  function resetGame() {
+    // Clear all bullets and enemies
+    bullets.forEach(b => b.remove());
+    enemies.forEach(e => e.remove());
+    bullets = [];
+    enemies = [];
+    score = 0;
+    lives = 3;
+    moveLeft = false;
+    moveRight = false;
+    lastEnemySpawn = 0;
+    gameOver = false;
+    playerX = gameWidth / 2;
+    player.style.left = playerX + 'px';
+    updateScore();
+    updateLives();
+    gameOverScreen.style.display = 'none';
+    requestAnimationFrame(gameLoop);
+  }
+
+  function gameLoop(timestamp) {
+    if (gameOver) return;
+
+    // Move player based on controls
+    if (moveLeft) {
+      playerX -= playerSpeed;
+    }
+    if (moveRight) {
+      playerX += playerSpeed;
+    }
+    playerX = clamp(playerX, playerWidth / 2, gameWidth - playerWidth / 2);
+    player.style.left = playerX + 'px';
+
+    // Move bullets
+    for (let i = bullets.length - 1; i >= 0; i--) {
+      const b = bullets[i];
+      const currentTop = b.offsetTop;
+      b.style.top = (currentTop - bulletSpeed) + 'px';
+      if (currentTop < -20) {
+        b.remove();
+        bullets.splice(i, 1);
+      }
+    }
+
+    // Spawn enemies periodically
+    if (!lastEnemySpawn || timestamp - lastEnemySpawn > enemySpawnInterval) {
+      const enemyX = Math.random() * (gameWidth - 40);
+      const enemy = createEnemy(enemyX, -40);
+      enemies.push(enemy);
+      lastEnemySpawn = timestamp;
+    }
+
+    // Move enemies
+    for (let i = enemies.length - 1; i >= 0; i--) {
+      const e = enemies[i];
+      const currentTop = e.offsetTop;
+      e.style.top = (currentTop + enemySpeed) + 'px';
+
+      // Check bullet collisions
+      let collided = false;
+      for (let j = bullets.length - 1; j >= 0; j--) {
+        const b = bullets[j];
+        if (isColliding(b, e)) {
+          e.remove();
+          b.remove();
+          enemies.splice(i, 1);
+          bullets.splice(j, 1);
+          score++;
+          updateScore();
+          collided = true;
+          break;
+        }
+      }
+      if (collided) continue;
+
+      // Enemy reached bottom?
+      if (e.offsetTop > gameHeight) {
+        e.remove();
+        enemies.splice(i, 1);
+        lives--;
+        updateLives();
+        if (lives <= 0) {
+          endGame();
+          break;
+        }
+      }
+    }
+
+    if (!gameOver) {
+      requestAnimationFrame(gameLoop);
+    }
+  }
+
+  // Button event listeners
+  leftBtn.addEventListener('mousedown', () => { if(!gameOver) moveLeft = true; });
+  leftBtn.addEventListener('touchstart', (e) => { e.preventDefault(); if(!gameOver) moveLeft = true; }, {passive:false});
+  leftBtn.addEventListener('mouseup', () => { moveLeft = false; });
+  leftBtn.addEventListener('touchend', () => { moveLeft = false; });
+
+  rightBtn.addEventListener('mousedown', () => { if(!gameOver) moveRight = true; });
+  rightBtn.addEventListener('touchstart', (e) => { e.preventDefault(); if(!gameOver) moveRight = true; }, {passive:false});
+  rightBtn.addEventListener('mouseup', () => { moveRight = false; });
+  rightBtn.addEventListener('touchend', () => { moveRight = false; });
+
+  shootBtn.addEventListener('click', () => { if(!gameOver) shoot(); });
+  shootBtn.addEventListener('touchstart', (e) => { e.preventDefault(); if(!gameOver) shoot(); }, {passive:false});
+
+  // Keyboard controls
+  window.addEventListener('keydown', (e) => {
+    if (gameOver) return;
+    if (e.repeat) return;
+    if (e.key === 'ArrowLeft') moveLeft = true;
+    if (e.key === 'ArrowRight') moveRight = true;
+    if (e.key === ' ' || e.key === 'ArrowUp') shoot();
+  });
+  window.addEventListener('keyup', (e) => {
+    if (e.key === 'ArrowLeft') moveLeft = false;
+    if (e.key === 'ArrowRight') moveRight = false;
+  });
+
+  // Swipe/touch drag for player horizontal movement
+  let touchStartX = null;
+
+  gameArea.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 1) {
+      touchStartX = e.touches[0].clientX;
+    }
+  }, {passive:false});
+
+  gameArea.addEventListener('touchmove', (e) => {
+    if (!touchStartX || gameOver) return;
+    let touchCurrentX = e.touches[0].clientX;
+    let deltaX = touchCurrentX - touchStartX;
+    playerX += deltaX * 0.8;
+    playerX = clamp(playerX, playerWidth / 2, gameWidth - playerWidth / 2);
+    player.style.left = playerX + 'px';
+    touchStartX = touchCurrentX;
+  }, {passive:false});
+
+  gameArea.addEventListener('touchend', () => {
+    touchStartX = null;
+  });
+
+  // Restart button
+  restartBtn.addEventListener('click', () => {
+    resetGame();
+  });
+
+  // Initialize game
+  function init() {
+    score = 0;
+    lives = 3;
+    playerX = gameWidth / 2;
+    bullets = [];
+    enemies = [];
+    moveLeft = false;
+    moveRight = false;
+    lastEnemySpawn = 0;
+    gameOver = false;
+    player.style.left = playerX + 'px';
+    updateScore();
+    updateLives();
+    gameOverScreen.style.display = 'none';
+
+    requestAnimationFrame(gameLoop);
+  }
+
+  init();
+
+})();
+</script>
+</body>
+</html>
+
+  
+  
